@@ -5,6 +5,7 @@ The Poc for migration
 ---------------------------------------------------------------------------------------------------------------------------------------
 This repository includes test code for migration from opensource 
 https://github.com/qzysw123456/kubernetes-pod-migration
+And also, some variables are fixed format to execute with in single K8S
 
 
 The structure of migration module - PoC 
