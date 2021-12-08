@@ -2,7 +2,8 @@
 This repository includes open sources of gs-link for connection between other clusters and cooperation works in gedge-platform
 
 1. PoC of migration
-this repository has test code for migration from opensource 
+---------------------------------------------------------------------------------------------------------------------------------------
+This repository include test code for migration from opensource 
 https://github.com/qzysw123456/kubernetes-pod-migration
 
 
