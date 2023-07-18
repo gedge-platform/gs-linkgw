@@ -18,13 +18,15 @@ This figure shows the structure of gs-linkgw
 
 
 The Service Collaboration Framework (GS-Link) consists of three modules as follows.
- GS-Link Collaborative Management Module: Provides multi-cluster connection management, multi-cluster offloading and service movement management, multi-cluster shared storage management and multi-cluster resource management functions.
- GS-Link collaboration service linked operation module: Provides core-edge, edge-edge interworking function and shared storage operation function for data collaboration processing
- GS-Link Collaboration Support Offloading and Service Mobility Module: Provides dynamic deployment of services and service mobility to support vertical/horizontal collaboration by jointly utilizing computing resources of the core cloud and cloud edges
+- GS-Link Collaborative Management Module: Provides multi-cluster connection management, multi-cluster offloading and service movement management, multi-cluster shared storage management and multi-cluster resource management functions.
+- GS-Link collaboration service linked operation module: Provides core-edge, edge-edge interworking function and shared storage operation function for data collaboration processing
+- GS-Link Collaboration Support Offloading and Service Mobility Module: Provides dynamic deployment of services and service mobility to support vertical/horizontal collaboration by jointly utilizing computing resources of the core cloud and cloud edges
+
 The module presented above is a function-oriented module and performs the following roles to provide services for actual GS-Link.
- GS-Link's collaboration management module serves as an API to support service collaboration functions and manages and monitors the system for collaboration.
- GS-Link collaboration service linkage operation module plays a role of data collaboration through connection between K8S clusters and shared storage between clusters
- GS-Link collaboration support offloading and movement module performs real-time high-speed movement and offloading between K8S clusters
+- GS-Link's collaboration management module serves as an API to support service collaboration functions and manages and monitors the system for collaboration.
+- GS-Link collaboration service linkage operation module plays a role of data collaboration through connection between K8S clusters and shared storage between clusters
+- GS-Link collaboration support offloading and movement module performs real-time high-speed movement and offloading between K8S clusters
+
 
 kubectl plugin
 ---------------------------------------------------------------------------------------------------------------------------------------
