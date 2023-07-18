@@ -41,5 +41,5 @@ Server running with 15213 port
 Migration Controller
 ---------------------------------------------------------------------------------------------------------------------------------------
 
-![figure2.png]({{site.baseurl}}/figure2.png)
+![figure2.png](https://github.com/gedge-platform/gs-linkgw/blob/012596ebdb3950ca1ee292e034fa4a23cb77b3da/figure2.png)
 
