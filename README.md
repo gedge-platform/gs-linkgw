@@ -14,7 +14,7 @@ https://github.com/schrej/podmigration-operator
 The structure of gs-linkgw 
 ---------------------------------------------------------------------------------------------------------------------------------------
 This figure shows the structure of gs-linkgw
-![figure1.png]({{site.baseurl}}/figure1.png)
+![figure1.png](https://github.com/gedge-platform/gs-linkgw/blob/076a56ddb030b150e675419806489828b6786b3b/figure1.png)
 
 
 The Service Collaboration Framework (GS-Link) consists of three modules as follows.
