@@ -17,7 +17,7 @@ This figure shows the structure of gs-linkgw
 ![figure1.png](https://github.com/gedge-platform/gs-linkgw/blob/076a56ddb030b150e675419806489828b6786b3b/figure1.png)
 
 
-The Service Collaboration Framework (GS-Link) consists of three modules as follows.
+The gs-linkgw consists of three modules as follows.
 - GS-Link Collaborative Management Module: Provides multi-cluster connection management, multi-cluster offloading and service movement management, multi-cluster shared storage management and multi-cluster resource management functions.
 - GS-Link collaboration service linked operation module: Provides core-edge, edge-edge interworking function and shared storage operation function for data collaboration processing
 - GS-Link Collaboration Support Offloading and Service Mobility Module: Provides dynamic deployment of services and service mobility to support vertical/horizontal collaboration by jointly utilizing computing resources of the core cloud and cloud edges
