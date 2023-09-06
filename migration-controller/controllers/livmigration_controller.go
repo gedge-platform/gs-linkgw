@@ -445,7 +445,7 @@ func (r *LivmigrationReconciler) getSrcPodTemplate(ctx context.Context, sourcePo
 	sourcePod, _ := r.podExist(ctx, sourcePodName, namespace)
 	if sourcePod == nil {
 		decode := scheme.Codecs.UniversalDeserializer().Decode
-		stream, err := os.ReadFile(defaulttemplate + "/" + sourcePodName + "_migration.yaml")
+		stream, err := os.ReadFile(defaulttemplate + "/" + sourcePodName + "_template.yaml")
 		if stream == nil {
 			return nil, err
 		}
