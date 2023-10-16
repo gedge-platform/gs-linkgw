@@ -26,6 +26,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
+    "io/fs"
+    "path/filepath"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -205,19 +208,30 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 		// 2: Getting Checkpoint path
 		container := pod.Spec.Containers[0].Name
-		checkpointPath := path.Join(defaultpath, annotations["sourcePod"])
-		for {
-			_, err := os.Stat(path.Join(checkpointPath, container, "descriptors.json"))
-			if os.IsNotExist(err) {
-				time.Sleep(100 * time.Millisecond)
+		checkpointPath := path.Join(defaultpath, annotations["sourcePod"], container)
+		//for {
+		//	_, err := os.Stat(path.Join(checkpointPath, container, "descriptors.json"))
+		//	if os.IsNotExist(err) {
+		//		time.Sleep(100 * time.Millisecond)
+		//	} else {
+		//		break
+		//	}
+		//}
+        for i := 1; i <= 5; i++  {
+			err := checkpoint_validation(checkpointPath)
+			if err == nil {	break
 			} else {
-				break
+					time.Sleep(100 * time.Millisecond)
 			}
+		}
+		if i == 5 {
+			log.Error(err, "sourcePod can't restore. Chekcpoint dosen't exists", "pod", annotations["sourcePod"])
+			return ctrl.Result{}, err
 		}
 		log.Info("", "Restore", "- between clusters - 2 - Check theat snapshot exists in chekpoint path  - finished")
 
 		// 3: Restore pod from Checkpoint path
-		newPod, err := r.restorePod(ctx, pod, annotations["sourcePod"], checkpointPath)
+		newPod, err := r.restorePod(ctx, pod, annotations["sourcePod"], defaultpath)
 		if err != nil {
 			log.Error(err, "unable to restore", "pod", pod)
 			return ctrl.Result{}, err
@@ -473,6 +487,30 @@ func (r *LivmigrationReconciler) getSrcPodTemplate(ctx context.Context, sourcePo
 		},
 	}
 	return template, nil
+}
+
+func searchfile(root, name string) (*os.File, error) {
+   var f *os.File
+   filepath.WalkDir(root, func(s string, d fs.DirEntry, e error) error {
+      if e != nil { return e }
+      if d.Name() != name { return nil }
+      f, e = os.Open(s)
+      if e != nil { return e }
+      return errors.New("found")
+   })
+   if f == nil {
+      return nil, errors.New("not found")
+   }
+   return f, nil
+}
+
+func checkpoint_validation(path string) error {
+   f, e := searchfile(path, "descriptors.json")
+   if e != nil {
+      return e
+   }
+   defer f.Close()
+   return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
