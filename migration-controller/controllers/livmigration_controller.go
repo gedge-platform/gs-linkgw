@@ -18,17 +18,17 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"math/rand"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-	"errors"
-    "io/fs"
-    "path/filepath"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -158,16 +158,24 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 		// 4: wait until checkpoint info are created
 		container := sourcePod.Spec.Containers[0].Name
-		checkpointPath := path.Join(defaultpath, annotations["sourcePod"])
-		for {
-			_, err := os.Stat(path.Join(checkpointPath, container, "descriptors.json"))
-			if os.IsNotExist(err) {
+		checkpointPath := path.Join(defaultpath, annotations["sourcePod"], container)
+
+		var i int
+		for i := 1; i <= 5; i++ {
+			err := checkpoint_validation(checkpointPath)
+			if err == nil {
+				break
+			} else {
 				time.Sleep(100 * time.Millisecond)
 				log.Info("", "live-migration", "- Inside cluster - Waiting for snapshot image ")
-			} else {
-				break
 			}
+
 		}
+		if i == 5 {
+			log.Error(err, "sourcePod can't restore. Chekcpoint dosen't exists", "pod", annotations["sourcePod"])
+			return ctrl.Result{}, err
+		}
+
 		log.Info("", "live-migration", "- Inside cluseter - 3 - Snapshot status check completed - finished")
 		log.Info("", "live-migration", "- Inside cluseter - 4 - Snapshot created and saved it - finished")
 
@@ -209,20 +217,16 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// 2: Getting Checkpoint path
 		container := pod.Spec.Containers[0].Name
 		checkpointPath := path.Join(defaultpath, annotations["sourcePod"], container)
-		//for {
-		//	_, err := os.Stat(path.Join(checkpointPath, container, "descriptors.json"))
-		//	if os.IsNotExist(err) {
-		//		time.Sleep(100 * time.Millisecond)
-		//	} else {
-		//		break
-		//	}
-		//}
-        for i := 1; i <= 5; i++  {
+
+		var i int
+		for i := 1; i <= 5; i++ {
 			err := checkpoint_validation(checkpointPath)
-			if err == nil {	break
+			if err == nil {
+				break
 			} else {
-					time.Sleep(100 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 			}
+
 		}
 		if i == 5 {
 			log.Error(err, "sourcePod can't restore. Chekcpoint dosen't exists", "pod", annotations["sourcePod"])
@@ -231,7 +235,7 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		log.Info("", "Restore", "- between clusters - 2 - Check theat snapshot exists in chekpoint path  - finished")
 
 		// 3: Restore pod from Checkpoint path
-		newPod, err := r.restorePod(ctx, pod, annotations["sourcePod"], defaultpath)
+		newPod, err := r.restorePod(ctx, pod, annotations["sourcePod"], annotations["snapshotPath"])
 		if err != nil {
 			log.Error(err, "unable to restore", "pod", pod)
 			return ctrl.Result{}, err
@@ -248,17 +252,6 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			}
 		}
 		log.Info("", "Restore", "- between clusters - 3 - Check whether newPod is Running or not - finished")
-
-		// 4: Delete source Pod
-		//if err := r.deletePod(ctx, sourcePod); err != nil {
-		//	log.Error(err, "unable to delete", "source pod", sourcePod)
-		//	return ctrl.Result{}, err
-		//}
-		if status, _ := r.podExist(ctx, sourcePod.Name, req.Namespace); status != nil {
-			log.Error(err, "Pod not deleted", "source pod", sourcePod)
-			return ctrl.Result{}, err
-		}
-		log.Info("", "Restore", "- between clusters - 4 - Delete the source pod - Restore finished")
 
 	case "checkpoint":
 		// Check that pod exists.
@@ -278,7 +271,7 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		log.Info("", "Checkpoint", "-- 2 - Clean previous checkpoint folder if exist - finished")
 
 		// --3: Checkpoint the source pod now
-		if err := r.checkpointPod(ctx, sourcePod, presnapshotPath); err != nil {
+		if err := r.checkpointPod(ctx, sourcePod, annotations["snapshotPath"]); err != nil {
 			log.Error(err, "unable to checkpoint", "pod", sourcePod)
 			return ctrl.Result{}, err
 		}
@@ -349,7 +342,7 @@ func (r *LivmigrationReconciler) restorePod(ctx context.Context, pod *corev1.Pod
 	pod.Name = sourcePod + "-migration-" + strconv.Itoa(number.Intn(100))
 
 	pod.ObjectMeta.Annotations["snapshotPolicy"] = "restore"
-	pod.ObjectMeta.Annotations["snapshotPath"] = checkpointPath
+	pod.ObjectMeta.Annotations["snapshotPath"] = checkpointPath + "/" + sourcePod
 	if err := r.Create(ctx, pod); err != nil {
 		return nil, err
 	}
@@ -490,27 +483,33 @@ func (r *LivmigrationReconciler) getSrcPodTemplate(ctx context.Context, sourcePo
 }
 
 func searchfile(root, name string) (*os.File, error) {
-   var f *os.File
-   filepath.WalkDir(root, func(s string, d fs.DirEntry, e error) error {
-      if e != nil { return e }
-      if d.Name() != name { return nil }
-      f, e = os.Open(s)
-      if e != nil { return e }
-      return errors.New("found")
-   })
-   if f == nil {
-      return nil, errors.New("not found")
-   }
-   return f, nil
+	var f *os.File
+	filepath.WalkDir(root, func(s string, d fs.DirEntry, e error) error {
+		if e != nil {
+			return e
+		}
+		if d.Name() != name {
+			return nil
+		}
+		f, e = os.Open(s)
+		if e != nil {
+			return e
+		}
+		return errors.New("found")
+	})
+	if f == nil {
+		return nil, errors.New("not found")
+	}
+	return f, nil
 }
 
 func checkpoint_validation(path string) error {
-   f, e := searchfile(path, "descriptors.json")
-   if e != nil {
-      return e
-   }
-   defer f.Close()
-   return nil
+	f, e := searchfile(path, "descriptors.json")
+	if e != nil {
+		return e
+	}
+	defer f.Close()
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
