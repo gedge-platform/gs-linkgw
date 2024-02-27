@@ -50,12 +50,6 @@ type LivmigrationReconciler struct {
 	Log    logr.Logger
 }
 
-/*const (
-	// podOwnerKey = ".metadata.controller"
-	podOwnerKey = "migPod"
-	// migratingPodFinalizer = "podmig.schrej.net/Migrate"
-)*/
-
 //+kubebuilder:rbac:groups=gedgemig.gedge.etri.kr,resources=livmigrations,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=gedgemig.gedge.etri.kr,resources=livmigrations/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=gedgemig.gedge.etri.kr,resources=livmigrations/finalizers,verbs=update
@@ -73,9 +67,6 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	//ctx = context.Background()
 	log := r.Log.WithValues("livemigration", req.NamespacedName)
 
-	// Set default migration path
-	defaultpath := "/mnt/migration"
-	default_template_path := "/mnt/migration/template"
 	/*
 	   Step 0: Fetch Livmigration from the Kubernetes API.
 	*/
@@ -86,6 +77,9 @@ func (r *LivmigrationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	log.Info("", "Livmigration Request Info", migPod.Spec)
+
+	defaultpath := migPod.Spec.SnapshotPath
+	default_template_path := defaultpath + "/template"
 
 	// Making template for migration from sourcePod (getdSrcPodTempleate)
 	var template *corev1.PodTemplateSpec

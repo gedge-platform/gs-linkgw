@@ -2,10 +2,10 @@
 set -e
 source scripts/global.sh
 
-info "Install ETRI migration operator"
+info "Install podmigration operator"
 
 cd $ETRI_PKG_DIR
-info "Install ETRI migration CRDs"
+info "Install pod migration CRDs"
 make install
 
 # Clean old migrater service
@@ -13,7 +13,7 @@ info "Clean old migrater service"
 rm -f $MIGRATION_SERVICE_FILE
 systemctl daemon-reload
 
-# Install CRD operator service
+# Install podmigration operator service
 cat << EOF | sudo tee $MIGRATION_SERVICE_FILE
 [Unit]
 Description=ETRI migration operator
