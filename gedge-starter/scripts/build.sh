@@ -32,12 +32,8 @@ cd $CONTAINERD_CRI_PKG_DIR
 
 
 # Clone Gedge-platform
-info "Git clone Gedge-platform"
+info "Custom binaries update"
 info "$ETRI_PKG_DIR"
-git clone https://github.com/gedge-platform/gs-linkgw $ETRI_PKG_INSTALL_DIR
-cd $ETRI_PKG_INSTALL_DIR 
-mv ./migration-controller $PKG_DIR
-rm -rf $ETRI_PKG_INSTALL_DIR
 cd $ETRI_PKG_DIR
 tar -vxf binaries.tar.bz2
 cd custom-binaries/
