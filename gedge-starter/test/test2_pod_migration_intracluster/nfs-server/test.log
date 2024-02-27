@@ -1,0 +1,9 @@
+mkdir -p /mnt/migration
+# edit etc/exports.mod with nfs server IP, shared directory, access control
+cp etc/exports.mod /etc/exports
+exportfs -arvf
+systemctl start nfs-kernel-server
+systemctl enable nfs-kernel-server
+systemctl status nfs-kernel-server
+echo hello > /mnt/migration/hello.txt
+cat /mnt/migration/hello.txt

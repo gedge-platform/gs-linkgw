@@ -1,0 +1,45 @@
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  createTimestamp: null
+  name: etri
+spec: {}
+status: {}
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test1
+  namespace: etri
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test1
+  template:
+    metadata:
+      labels:
+        app: test1
+    spec:
+      containers:
+        - name: test1
+          image: nginx:1.14
+          ports:
+            - containerPort: 80
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: test1
+  namespace: etri
+spec:
+  selector:
+    app: test1
+  type: ClusterIP
+  ports:
+    - port: 8080 # service port
+      targetPort: 80 # pod port
