@@ -14,4 +14,4 @@ Gedge-starter is a tool for configuring the gs-linkgw environment and sequential
 	make deploy_broker_info
 	make join_broker
 	make join_master
-  make remove_broker
+        make remove_broker
